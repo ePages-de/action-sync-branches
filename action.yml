@@ -55,7 +55,7 @@ runs:
             --head ${{ inputs.head }} \
             --base ${{ inputs.base }} \
             --json url \
-            | jq -r '.[0].url // ""'
+            --jq '.[0].url // ""'
         )
         echo "pull_request_url=$pull_request_url" >> $GITHUB_ENV
       env:
