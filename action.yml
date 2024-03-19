@@ -24,7 +24,7 @@ inputs:
     description: Use administrator privileges to merge a pull request that does not meet requirements
   github_token:
     description: GitHub token
-    default: ${{ secrets.GITHUB_TOKEN }}
+    default: ${{ github.token }}
 
 runs:
   using: composite
