@@ -37,7 +37,7 @@ runs:
       run: |
         pull_request_title=${{ toJSON(inputs.title) }}
         if [ "$pull_request_title" == '' ]; then
-          pull_request_title="Sync `${{ inputs.base }}` branch"
+          pull_request_title="Sync ${{ inputs.base }} branch"
         fi
         echo "pull_request_title=$pull_request_title" >> $GITHUB_ENV
 
