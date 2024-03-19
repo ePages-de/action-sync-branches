@@ -1,0 +1,78 @@
+name: Sync Branches
+description: GitHub Action to sync GitHub branch with the changes from another branch.
+author: Unai Abrisketa <uabrisketa@epages.com>
+
+inputs:
+  base:
+    description: Base branch
+    required: true
+  head:
+    description: Head branch (e.g., master)
+    default: ${{ github.event.repository.default_branch }}
+  merge:
+    description: Merge method (merge, squash, rebase)
+    default: merge
+  title:
+    description: Pull request title
+  body:
+    description: Pull request body
+  labels:
+    description: Labels to add to the pull request
+  delete-branch:
+    description: Delete the local and remote branch after merge
+  admin:
+    description: Use administrator privileges to merge a pull request that does not meet requirements
+  github_token:
+    description: GitHub token
+    default: ${{ secrets.GITHUB_TOKEN }}
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set Pull Request title and body
+      shell: bash
+      run: |
+        pull_request_title=${{ toJSON(inputs.title) }}
+        if [ "$pull_request_title" == '' ]; then
+          pull_request_title="Sync ${{ inputs.base }} branch"
+        fi
+        echo "pull_request_title=$pull_request_title" >> $GITHUB_ENV
+
+        pull_request_body=${{ toJSON(inputs.body) }}
+        if [ "$pull_request_body" == '' ]; then
+          pull_request_body="Sync __${{ inputs.base }}__ branch with the latest changes on __${{ inputs.head }}__"
+        fi
+        echo "pull_request_body=$pull_request_body" >> $GITHUB_ENV
+
+    - name: Check Pull Request existence
+      shell: bash
+      run: |
+        pull_request_url=$(
+          gh pr list \
+            --head ${{ inputs.head }} \
+            --base ${{ inputs.base }} \
+            --json url \
+            | jq -r '.[0].url'
+        )
+        echo "pull_request_url=$pull_request_url" >> $GITHUB_ENV
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+
+    - name: Create pull request
+      if: env.pull_request_url  == ''
+      shell: bash
+      run: |
+        pull_request_url=$(
+          gh pr create \
+            --base ${{ inputs.base }} \
+            --head ${{ inputs.head }} \
+            --title ${{ toJSON(env.pull_request_title) }} \
+            --body ${{ toJSON(env.pull_request_body) }} \
+            --label "${{ inputs.labels }}"
+        )
+        echo "pull_request_url=$pull_request_url" >> $GITHUB_ENV
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
