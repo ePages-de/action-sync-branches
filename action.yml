@@ -62,7 +62,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Create pull request
-      if: env.pull_request_url  == ''
+      if: env.pull_request_url  == 'null'
       shell: bash
       run: |
         pull_request_url=$(
