@@ -37,13 +37,13 @@ runs:
       run: |
         pull_request_title=${{ toJSON(inputs.title) }}
         if [ "$pull_request_title" == '' ]; then
-          pull_request_title="Sync ${{ format('`{0}`', inputs.base) }} branch"
+          pull_request_title="Sync ${{ format('\`{0}\`', inputs.base) }} branch"
         fi
         echo "pull_request_title=$pull_request_title" >> $GITHUB_ENV
 
         pull_request_body=${{ toJSON(inputs.body) }}
         if [ "$pull_request_body" == '' ]; then
-          pull_request_body="Sync ${{ format('`{0}`', inputs.base) }} branch with the latest changes on ${{ format('`{0}`', inputs.head) }}"`
+          pull_request_body="Sync ${{ format('\`{0}\`', inputs.base) }} branch with the latest changes on ${{ format('\`{0}\`', inputs.head) }}"
         fi
         echo "pull_request_body=$pull_request_body" >> $GITHUB_ENV
 
