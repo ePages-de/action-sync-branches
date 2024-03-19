@@ -37,7 +37,7 @@ runs:
       run: |
         pull_request_title=${{ toJSON(inputs.title) }}
         if [ "$pull_request_title" == '' ]; then
-          pull_request_title="Sync ${{ inputs.base }} branch"
+          pull_request_title="Sync `${{ inputs.base }}` branch"
         fi
         echo "pull_request_title=$pull_request_title" >> $GITHUB_ENV
 
@@ -55,14 +55,14 @@ runs:
             --head ${{ inputs.head }} \
             --base ${{ inputs.base }} \
             --json url \
-            | jq -r '.[0].url'
+            | jq -r '.[0].url // ""'
         )
         echo "pull_request_url=$pull_request_url" >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Create pull request
-      if: env.pull_request_url  == 'null'
+      if: env.pull_request_url  == ''
       shell: bash
       run: |
         pull_request_url=$(
