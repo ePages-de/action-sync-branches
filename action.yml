@@ -90,12 +90,12 @@ runs:
       id: merge_pull_request
       shell: bash
       run: >-
-        echo "pull_request_url=$pull_request_url" >> $GITHUB_OUTPUT
-
         gh pr merge ${{ env.pull_request_url }}
         ${{ inputs.admin == 'true' && '--admin' || '' }}
         ${{ inputs.auto == 'true' && '--auto' || '' }}
         ${{ inputs.delete_branch == 'true' && '--delete-branch' || '' }}
         ${{ format('--{0}', inputs.merge) }}
+
+        echo "pull_request_url=$pull_request_url" >> $GITHUB_OUTPUT
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
