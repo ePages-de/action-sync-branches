@@ -31,7 +31,7 @@ inputs:
 outputs:
   pull_request_url:
     description: Pull Request URL
-    value: ${{ steps.merge_pull_request.outputs.pull_request_url }}
+    value: ${{ steps.find_or_create_pull_request.outputs.pull_request_url }}
 
 runs:
   using: composite
@@ -56,6 +56,7 @@ runs:
         echo "pull_request_body=$pull_request_body" >> $GITHUB_OUTPUT
 
     - name: Check Pull Request existence
+      id: find_or_create_pull_request
       shell: bash
       run: |-
         pull_request_url=$(
@@ -65,37 +66,31 @@ runs:
             --json url \
             --jq '.[0].url // ""'
         )
-        echo "pull_request_url=$pull_request_url" >> $GITHUB_ENV
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
 
-    - name: Create pull request
-      if: env.pull_request_url  == ''
-      shell: bash
-      run: |-
-        pull_request_url=$(
-          gh pr create \
-            --base ${{ inputs.base }} \
-            --head ${{ inputs.head }} \
-            --title '${{ steps.set_pull_request_inputs.outputs.pull_request_title }}' \
-            --body '${{ steps.set_pull_request_inputs.outputs.pull_request_body }}' \
-            --label '${{ inputs.labels }}'
-        )
-        echo "pull_request_url=$pull_request_url" >> $GITHUB_ENV
+        if [ "$pull_request_url" == '' ]; then
+          pull_request_url=$(
+            gh pr create \
+              --base ${{ inputs.base }} \
+              --head ${{ inputs.head }} \
+              --title '${{ steps.set_pull_request_inputs.outputs.pull_request_title }}' \
+              --body '${{ steps.set_pull_request_inputs.outputs.pull_request_body }}' \
+              --label '${{ inputs.labels }}'
+          )
+        fi
+
+        echo "pull_request_url=$pull_request_url" >> $GITHUB_OUTPUT
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Merge pull request
-      if: inputs.merge != 'false' && env.pull_request_url != ''
+      if: inputs.merge != 'false' && steps.find_or_create_pull_request.outputs.pull_request_url != ''
       id: merge_pull_request
       shell: bash
       run: >-
-        gh pr merge ${{ env.pull_request_url }}
+        gh pr merge ${{ steps.find_or_create_pull_request.outputs.pull_request_url }}
         ${{ inputs.admin == 'true' && '--admin' || '' }}
         ${{ inputs.auto == 'true' && '--auto' || '' }}
         ${{ inputs.delete_branch == 'true' && '--delete-branch' || '' }}
         ${{ format('--{0}', inputs.merge) }}
-
-        echo "pull_request_url=$pull_request_url" >> $GITHUB_OUTPUT
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
