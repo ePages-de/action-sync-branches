@@ -55,7 +55,7 @@ runs:
         fi
         echo "pull_request_body=$pull_request_body" >> $GITHUB_OUTPUT
 
-    - name: Check Pull Request existence
+    - name: Find or create Pull Request
       id: find_or_create_pull_request
       shell: bash
       run: |-
@@ -84,7 +84,6 @@ runs:
 
     - name: Merge pull request
       if: inputs.merge != 'false' && steps.find_or_create_pull_request.outputs.pull_request_url != ''
-      id: merge_pull_request
       shell: bash
       run: >-
         gh pr merge ${{ steps.find_or_create_pull_request.outputs.pull_request_url }}
