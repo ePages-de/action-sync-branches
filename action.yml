@@ -65,12 +65,13 @@ runs:
       if: env.pull_request_url  == ''
       shell: bash
       run: |
+        echo ${{ env.pull_request_title }}
         pull_request_url=$(
           gh pr create \
             --base ${{ inputs.base }} \
             --head ${{ inputs.head }} \
-            --title \'${{ toJSON(env.pull_request_title) }}\' \
-            --body \'${{ toJSON(env.pull_request_body) }}\' \
+            --title ${{ env.pull_request_title }} \
+            --body ${{ env.pull_request_body }} \
             --label "${{ inputs.labels }}"
         )
         echo "pull_request_url=$pull_request_url" >> $GITHUB_ENV
