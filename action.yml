@@ -40,23 +40,24 @@ runs:
       uses: actions/checkout@v4
 
     - name: Set Pull Request title and body
+      id: set_pull_request_inputs
       shell: bash
-      run: |
+      run: |-
         pull_request_title=${{ toJSON(inputs.title) }}
         if [ "$pull_request_title" == '' ]; then
           pull_request_title="Sync \`${{ inputs.base }}\` branch"
         fi
-        echo "pull_request_title=$pull_request_title" >> $GITHUB_ENV
+        echo "pull_request_title=$pull_request_title" >> $GITHUB_OUTPUT
 
         pull_request_body=${{ toJSON(inputs.body) }}
         if [ "$pull_request_body" == '' ]; then
           pull_request_body="Sync \`${{ inputs.base }}\` branch with the latest changes on \`${{ inputs.head }}\`."
         fi
-        echo "pull_request_body=$pull_request_body" >> $GITHUB_ENV
+        echo "pull_request_body=$pull_request_body" >> $GITHUB_OUTPUT
 
     - name: Check Pull Request existence
       shell: bash
-      run: |
+      run: |-
         pull_request_url=$(
           gh pr list \
             --head ${{ inputs.head }} \
@@ -70,14 +71,15 @@ runs:
 
     - name: Create pull request
       if: env.pull_request_url  == ''
+      continue-on-error: true
       shell: bash
-      run: |
+      run: |-
         pull_request_url=$(
           gh pr create \
             --base ${{ inputs.base }} \
             --head ${{ inputs.head }} \
-            --title '${{ env.pull_request_title }}' \
-            --body '${{ env.pull_request_body }}' \
+            --title '${{ steps.set_pull_request_inputs.outputs.pull_request_title }}' \
+            --body '${{ steps.set_pull_request_inputs.outputs.pull_request_body }}' \
             --label '${{ inputs.labels }}'
         )
         echo "pull_request_url=$pull_request_url" >> $GITHUB_ENV
@@ -87,7 +89,7 @@ runs:
     - name: Merge pull request
       if: inputs.merge != 'false' && env.pull_request_url != ''
       shell: bash
-      run: |
+      run: |-
         gh pr merge ${{ env.pull_request_url }} \
           ${{ inputs.admin == 'true' && '--admin' || '' }} \
           ${{ inputs.auto == 'true' && '--auto' || '' }} \
