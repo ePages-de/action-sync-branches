@@ -1,6 +1,6 @@
 name: Sync Branches
 description: GitHub Action to sync GitHub branch with the changes from another branch.
-author: Unai Abrisketa <uabrisketa@epages.com>
+author: Unai Abrisketa <uabrisketa@epages.com>, Andres Bernardi <abernardi@epages.com>
 
 inputs:
   base:
@@ -22,7 +22,7 @@ inputs:
   delete_branch:
     description: Delete the local and remote branch after merge
   merge:
-    description: Merge method (merge, squash, rebase)
+    description: Merge method (merge, squash, rebase) if
     default: false
   github_token:
     description: GitHub token
@@ -71,7 +71,6 @@ runs:
 
     - name: Create pull request
       if: env.pull_request_url  == ''
-      continue-on-error: true
       shell: bash
       run: |-
         pull_request_url=$(
@@ -89,11 +88,11 @@ runs:
     - name: Merge pull request
       if: inputs.merge != 'false' && env.pull_request_url != ''
       shell: bash
-      run: |-
-        gh pr merge ${{ env.pull_request_url }} \
-          ${{ inputs.admin == 'true' && '--admin' || '' }} \
-          ${{ inputs.auto == 'true' && '--auto' || '' }} \
-          ${{ inputs.delete_branch == 'true' && '--delete-branch' || '' }} \
-          ${{ format('--{0}', inputs.merge) }}
+      run: >-
+        gh pr merge ${{ env.pull_request_url }}
+        ${{ inputs.admin == 'true' && '--admin' || '' }}
+        ${{ inputs.auto == 'true' && '--auto' || '' }}
+        ${{ inputs.delete_branch == 'true' && '--delete-branch' || '' }}
+        ${{ format('--{0}', inputs.merge) }}
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
