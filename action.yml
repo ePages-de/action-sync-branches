@@ -7,24 +7,31 @@ inputs:
     description: Base branch
     required: true
   head:
-    description: Head branch (e.g., master)
+    description: Head branch
     default: ${{ github.event.repository.default_branch }}
-  merge:
-    description: Merge method (merge, squash, rebase)
-    default: false
   title:
     description: Pull request title
   body:
     description: Pull request body
   labels:
     description: Labels to add to the pull request
-  delete-branch:
-    description: Delete the local and remote branch after merge
   admin:
     description: Use administrator privileges to merge a pull request that does not meet requirements
+  auto:
+    description: Automatically merge only after necessary requirements are met
+  delete_branch:
+    description: Delete the local and remote branch after merge
+  merge:
+    description: Merge method (merge, squash, rebase)
+    default: false
   github_token:
     description: GitHub token
     default: ${{ github.token }}
+
+outputs:
+  pull_request_url:
+    description: Pull Request URL
+    value: ${{ env.pull_request_url }}
 
 runs:
   using: composite
@@ -43,7 +50,7 @@ runs:
 
         pull_request_body=${{ toJSON(inputs.body) }}
         if [ "$pull_request_body" == '' ]; then
-          pull_request_body="Sync \`${{ inputs.base }}\` branch with the latest changes on \`${{ inputs.head }}\`"
+          pull_request_body="Sync \`${{ inputs.base }}\` branch with the latest changes on \`${{ inputs.head }}\`."
         fi
         echo "pull_request_body=$pull_request_body" >> $GITHUB_ENV
 
@@ -81,4 +88,10 @@ runs:
       if: inputs.merge != 'false' && env.pull_request_url != ''
       shell: bash
       run: |
-        echo "Merge PR ${{ env.pull_request_url }}"
+        gh pr merge ${{ env.pull_request_url }} \
+          ${{ inputs.admin == 'true' && '--admin' || '' }} \
+          ${{ inputs.auto == 'true' && '--auto' || '' }} \
+          ${{ inputs.delete_branch == 'true' && '--delete-branch' || '' }} \
+          ${{ format('--{0}', inputs.merge) }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
