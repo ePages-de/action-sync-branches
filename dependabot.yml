@@ -5,17 +5,11 @@
 
 version: 2
 
-registries:
-  dependabot-github:
-    type: git
-    url: https://github.com
-    username: x-access-token
-    password: "${{ secrets.T42_BUNDLE_GITHUB__COM }}"
-
+updates:
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'monthly'
+      interval: 'weekly'
     allow:
       - dependency-type: 'all'
     labels:
